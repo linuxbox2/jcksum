@@ -46,8 +46,16 @@ public class jcksum {
 	    		"file-256k",
 	    		"file-1m"
 	    		);
-	} /* fileNames */
+	} /* inputFileNames */
 
+	public static Stream<String> mpuFileNames() {
+	    return Stream.of(
+	    		"file-5m",
+	    		"file-10m",
+	    		"file-100m"
+	    		);
+	} /* mpuFileNames */
+	
 	public static void listBucket(S3Client s3) {
         try {
             ListObjectsRequest listObjects = ListObjectsRequest.builder()

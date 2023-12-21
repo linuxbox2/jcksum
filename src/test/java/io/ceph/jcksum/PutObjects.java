@@ -149,6 +149,21 @@ class PutObjects {
 		}
 		return md5_check;
 	}
+
+	boolean mpuAndVerifyNoCksum(S3Client s3, String in_file_path) {
+		boolean md5_check = false;
+		try {
+			String out_key_name = "out_key_name"; // name we'll give the object in S3
+			CompleteMultipartUploadResponse put_rsp = jcksum.mpuObjectFromFileNoCksum(s3, in_file_path, out_key_name);
+			String out_file_path = "out_file_name"; // name of the temp object when we download it back
+			GetObjectResponse get_rsp = jcksum.GetObject(s3, out_key_name, out_file_path);
+			md5_check = compareFileDigests(in_file_path, out_file_path);
+		} catch (Exception e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+		}
+		return md5_check;
+	}
 	
 	@ParameterizedTest
 	@MethodSource("io.ceph.jcksum.jcksum#inputFileNames")
@@ -169,11 +184,20 @@ class PutObjects {
 	}
 
 	@ParameterizedTest
-	@MethodSource("io.ceph.jcksum.jcksum#inputFileNames")
+	@MethodSource("io.ceph.jcksum.jcksum#mpuFileNames")
 	void mpuObjectFromFileCksum(String in_file_path) {
 		boolean rslt = false;
 		System.out.println("mpuObjectFromFileCksum called with " + in_file_path);
 		rslt = mpuAndVerifyCksum(client, in_file_path);
+		assertTrue(rslt);
+	}
+
+	@ParameterizedTest
+	@MethodSource("io.ceph.jcksum.jcksum#mpuFileNames")
+	void mpuObjectFromFileNoCksum(String in_file_path) {
+		boolean rslt = false;
+		System.out.println("mpuObjectFromFileNoCksum called with " + in_file_path);
+		rslt = mpuAndVerifyNoCksum(client, in_file_path);
 		assertTrue(rslt);
 	}
 	

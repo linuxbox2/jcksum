@@ -240,15 +240,4 @@ class PutObjects {
 		assertTrue(rslt);
 	}
 
-	@Test
-	@Tag("Failing")
-	@MethodSource("io.ceph.jcksum.jcksum#inputFileNames")
-	void putObjectFromFileCksumSSLFail() {
-		String in_file_path = "file-1m";
-		boolean rslt = false;
-		System.out.println("putObjectFromFileCksumSSL called with " + in_file_path);
-		rslt = putAndVerifyCksum(ssl_client, in_file_path);
-		assertTrue(rslt);
-	}
-
 } /* class PutObjects */

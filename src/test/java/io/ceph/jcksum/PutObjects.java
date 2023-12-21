@@ -24,7 +24,9 @@ import software.amazon.awssdk.core.checksums.*;
 import software.amazon.awssdk.core.checksums.Algorithm;
 
 import org.junit.jupiter.api.*; /* BeforeAll, Test, &c */
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestInstance.*;
+
 import org.junit.jupiter.params.*;
 import org.junit.jupiter.params.provider.*;
 
@@ -201,11 +203,51 @@ class PutObjects {
 		assertTrue(rslt);
 	}
 	
-	@Test
-	void test() {
+	/* SSL */
+	@ParameterizedTest
+	@MethodSource("io.ceph.jcksum.jcksum#inputFileNames")
+	void putObjectFromFileCksumSSL(String in_file_path) {
 		boolean rslt = false;
-		System.out.println("test");
-		rslt = putAndVerifyNoCksum(client, "file-8b");
+		System.out.println("putObjectFromFileCksumSSL called with " + in_file_path);
+		rslt = putAndVerifyCksum(ssl_client, in_file_path);
+		assertTrue(rslt);
+	}
+	
+	@ParameterizedTest
+	@MethodSource("io.ceph.jcksum.jcksum#inputFileNames")
+	void putObjectFromFileNoCksumSSL(String in_file_path) {
+		boolean rslt = false;
+		System.out.println("putObjectFromFileNoCksumSSL called with " + in_file_path);
+		rslt = putAndVerifyNoCksum(ssl_client, in_file_path);
+		assertTrue(rslt);
+	}
+
+	@ParameterizedTest
+	@MethodSource("io.ceph.jcksum.jcksum#mpuFileNames")
+	void mpuObjectFromFileCksumSSL(String in_file_path) {
+		boolean rslt = false;
+		System.out.println("mpuObjectFromFileCksumSSL called with " + in_file_path);
+		rslt = mpuAndVerifyCksum(ssl_client, in_file_path);
+		assertTrue(rslt);
+	}
+
+	@ParameterizedTest
+	@MethodSource("io.ceph.jcksum.jcksum#mpuFileNames")
+	void mpuObjectFromFileNoCksumSSL(String in_file_path) {
+		boolean rslt = false;
+		System.out.println("mpuObjectFromFileNoCksumSSL called with " + in_file_path);
+		rslt = mpuAndVerifyNoCksum(ssl_client, in_file_path);
+		assertTrue(rslt);
+	}
+
+	@Test
+	@Tag("Failing")
+	@MethodSource("io.ceph.jcksum.jcksum#inputFileNames")
+	void putObjectFromFileCksumSSLFail() {
+		String in_file_path = "file-1m";
+		boolean rslt = false;
+		System.out.println("putObjectFromFileCksumSSL called with " + in_file_path);
+		rslt = putAndVerifyCksum(ssl_client, in_file_path);
 		assertTrue(rslt);
 	}
 

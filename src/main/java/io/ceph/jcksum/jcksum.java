@@ -43,8 +43,11 @@ public class jcksum {
 	    		"file-8b",
 	    		"file-200b",
 	    		"file-21983b",
+	    		"file-5519b",
+	    		"file-204329b",
 	    		"file-256k",
-	    		"file-1m"
+	    		"file-1m",
+	    		"file-1038757b"
 	    		);
 	} /* inputFileNames */
 

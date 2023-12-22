@@ -89,6 +89,7 @@ class PutObjects {
 					rch.position(0);
 					f_resid = 1024 * 1024;
 					r_offset = 0;
+					
 				}
 			}
 			if (rch != null) {

@@ -9,6 +9,14 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.stream.*;
+import java.nio.*; // ByteBuffer
+import java.nio.file.Files.*; //newByteChannel
+import java.nio.file.OpenOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.nio.channels.*;
+import java.lang.Math.*;
 
 import io.ceph.jcksum.*;
 import software.amazon.awssdk.auth.credentials.*;
@@ -39,20 +47,55 @@ class PutObjects {
 	public AwsCredentials creds;
 	public URI http_uri, ssl_uri;
 	static S3Client client, ssl_client;
-
-	void generateFile(String in_file_path, String out_file_path, int megs) {
+	
+	void generateFile(String in_file_path, String out_file_path, long length) {
 		try {
-			File f = new File(in_file_path);
+			Path ifp = Paths.get(in_file_path);
+			File f = ifp.toFile();
+
+			long if_size = f.length();
+			if (if_size < (1024 * 1024)) {
+				throw new IOException("in_file_path is supposed to be file-1m (i.e., a 1Mb file");
+			}
+
 			File of = new File(out_file_path);
 			if (of.exists()) {
 				of.delete();
 			}
-			for (int ix = 0; ix < megs; ++ix) {
-				InputStream ifs = new FileInputStream(f);
-				FileOutputStream ofs = new FileOutputStream(of, true /* append */);
-				ifs.transferTo(ofs);
-				ofs.close();
-				ifs.close();
+			
+			FileOutputStream fout = new FileOutputStream(of);
+			FileChannel wch = fout.getChannel();
+
+			long resid = length;
+			long r_offset = 0;
+			long f_resid = 0;
+			
+			FileInputStream fin = new FileInputStream(f);
+			FileChannel rch = fin.getChannel();
+			
+			while (resid > 0) {
+				long to_write = Long.min(resid, f_resid);
+				while (to_write > 0) {
+					long written = rch.transferTo(r_offset, to_write, wch);
+					r_offset += written;
+					to_write -= written;
+					resid -= written;
+					f_resid -= written;
+				}
+				if (f_resid < 0) {
+					throw new IOException("read overrun (logic error)");
+				}
+				if (f_resid == 0) {
+					rch.position(0);
+					f_resid = 1024 * 1024;
+					r_offset = 0;
+				}
+			}
+			if (rch != null) {
+				rch.close();
+			}
+			if (wch != null) {
+				wch.close();
 			}
 		} catch (IOException e) {
             System.err.println(e.getMessage());
@@ -61,9 +104,13 @@ class PutObjects {
 	} /* generateFile */
 	
 	void generateBigFiles() {
-		generateFile("file-1m", "file-5m", 5);
-		generateFile("file-1m", "file-10m", 10);
-		generateFile("file-1m", "file-100m", 100);
+		generateFile("file-1m", "file-5m", 5 * 1024 * 1024);
+		generateFile("file-1m", "file-10m", 10 * 1024 * 1024);
+		generateFile("file-1m", "file-100m", 100 * 1024 * 1024);
+		/* the next lengths happen to be prime */
+		generateFile("file-1m", "file-5519b", 5519);
+		generateFile("file-1m", "file-204329b", 204329);
+		generateFile("file-1m", "file-1038757b", 1038757);
 	}
 	
 	@BeforeAll
